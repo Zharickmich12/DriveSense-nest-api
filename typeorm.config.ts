@@ -1,32 +1,21 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import * as dotenv from 'dotenv';
+import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { config } from 'dotenv';
 
+// Cargar variables de entorno
+config();
 
-dotenv.config();
+const configService = new ConfigService();
 
-export const typeOrmConfig: TypeOrmModuleOptions = {
-  
-  type: (process.env.DB_TYPE as any) || 'mysql', 
-  
-  host: process.env.DB_HOST || 'localhost',
- port: parseInt(process.env.DB_PORT ?? '3306', 10),
-  username: process.env.DB_USERNAME || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'DriveSenseDB',
- 
-  entities: [
-    __dirname + '/../**/*.entity{.ts,.js}', 
-  ],
- 
-  synchronize: false, 
-  
-  
-  logging: true,
-  
-  migrationsTableName: 'migrations',
-  migrations: [
-    __dirname + '/../migrations/*{.ts,.js}',
-  ],
-};
-
-export default typeOrmConfig;
+export default new DataSource({
+  type: 'mysql',
+  host: configService.get('DB_HOST') || 'localhost',
+  port: parseInt(configService.get('DB_PORT') || '3306'),
+  username: configService.get('DB_USERNAME') || 'root',
+  password: configService.get('DB_PASSWORD') || '',
+  database: configService.get('DB_NAME') || 'DriveSenseDB',
+  entities: ['src//*.entity{.ts,.js}'],
+  migrations: ['src/migrations/*{.ts,.js}'],
+  synchronize: false,
+  logging: true,
+});

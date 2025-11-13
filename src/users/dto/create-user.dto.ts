@@ -1,14 +1,19 @@
-import { IsEmail, IsNotEmpty, Length } from "class-validator";
+import { IsString, IsEmail, MinLength, IsOptional, IsIn, IsNotEmpty } from 'class-validator';
 
-export class CreateUserDTO {
-    @IsNotEmpty()
-    name: string;
+export class CreateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsNotEmpty()
-    @IsEmail()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsNotEmpty()
-    @Length(8, 32, {message: 'La contraseña no tiene el número de caracteres requerido'})
-    password: string;
+  @MinLength(6, { message: 'Password must be at least 6 characters long.' })
+  @IsNotEmpty()
+  password: string;
+
+  @IsOptional()
+  @IsIn(['admin','user'])
+  role?: 'admin' | 'user';
 }

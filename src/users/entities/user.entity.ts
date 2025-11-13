@@ -1,29 +1,27 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-export type Roles = 'admin' | 'user'
+export type UserRole = 'admin' | 'user';
 
-export enum RolesEnum {
-   ADMIN = 'admin',
-   USER = 'user'
-}
-
-@Entity()
+@Entity('users')
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ nullable: false })
-    name: string;
+  @Column({ length: 100 })
+  name: string;
 
-    @Column({ nullable: false, unique: true })
-    email: string;
+  @Column({ unique: true })
+  email: string;
 
-    @Column({ nullable: false })
-    password: string;
+  @Column()
+  password: string; // hashed password
 
-    @Column({ nullable: false, default: true })
-    status: boolean;
+  @Column({ type: 'varchar', default: 'user' })
+  role: UserRole;
 
-    @Column({ default: RolesEnum.USER })
-    role: Roles
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

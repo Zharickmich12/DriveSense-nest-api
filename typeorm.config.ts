@@ -1,32 +1,28 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-
+import * as path from 'path';
 
 dotenv.config();
 
-export const typeOrmConfig: TypeOrmModuleOptions = {
-  
-  type: (process.env.DB_TYPE as any) || 'mysql', 
-  
+const dataSourceOptions: DataSourceOptions = {
+  type: (process.env.DB_TYPE as any) || 'mysql',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  port: Number(process.env.DB_PORT) || 3306,
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'DriveSenseDB',
- 
   entities: [
-    __dirname + '/../**/*.entity{.ts,.js}', 
+    path.join(__dirname, '/src/**/*.entity{.ts,.js}'),
   ],
- 
-  synchronize: false, 
-  
-  
+  synchronize: false,
   logging: true,
-  
   migrationsTableName: 'migrations',
   migrations: [
-    __dirname + '/../migrations/*{.ts,.js}',
+    path.join(__dirname, '/src/migrations/*{.ts,.js}'),
   ],
 };
 
-export default typeOrmConfig;
+export const typeOrmConfig: TypeOrmModuleOptions = dataSourceOptions;
+
+export default new DataSource(dataSourceOptions);

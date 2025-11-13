@@ -19,7 +19,7 @@ export class RulesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.rulesService.findOne(+id);
+    return this.rulesService.findOne(+id );
   }
 
   @Patch(':id')

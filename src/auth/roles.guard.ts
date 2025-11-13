@@ -4,9 +4,9 @@ import { ROLES_KEY } from "./roles.decorator";
 
 /**
  * @class RolesGuard
- * @description Guardia personalizada que valida el rol del usuario autenticado.
+ * @description Custom guard that validates the role of the authenticated user.
  * @implements CanActivate
- * @throws ForbiddenException - Si el usuario no está autenticado o no tiene permisos.
+ * @throws ForbiddenException - If the user is not authenticated or does not have the required permissions.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -14,9 +14,9 @@ export class RolesGuard implements CanActivate {
 
      /**
      * @method canActivate
-     * @description Verifica si el usuario tiene los roles requeridos para acceder a la ruta.
-     * @param context - Contexto de ejecución HTTP.
-     * @returns true si el usuario tiene permisos, lanza excepción si no.
+     * @description Checks if the user has the required roles to access the route.
+     * @param context - HTTP execution context.
+     * @returns true if the user has permission, otherwise throws an exception.
      */
     canActivate(context: ExecutionContext): boolean {
         const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
@@ -28,10 +28,10 @@ export class RolesGuard implements CanActivate {
 
         const { user } = context.switchToHttp().getRequest();
 
-        if (!user) throw new ForbiddenException ('Usuario no autenticado')
+        if (!user) throw new ForbiddenException ('User not authenticated')
 
         if (!requiredRoles.includes(user.role)) {
-            throw new ForbiddenException ('No tiene permiso para acceder a este ruta')
+            throw new ForbiddenException ('You do not have permission to access this route')
         }
         return true;
     }

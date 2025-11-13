@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 /**
  * @class JwtStrategy
- * @description Estrategia Passport para validar tokens JWT.
+ * @description Passport strategy to validate JWT tokens.
  * @extends PassportStrategy
  */
 @Injectable()
@@ -18,11 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         });
     }
 
-     /**
+    /**
      * @method validate
-     * @description Retorna los datos del payload JWT después de ser verificados.
-     * @param payload - Información contenida en el token JWT.
-     * @returns Objeto con los datos básicos del usuario.
+     * @description Returns the JWT payload data after verification.
+     * @param payload - Information contained in the JWT token.
+     * @returns Object with the user's basic data.
      */
     async validate(payload: any) {
         return { id: payload.sub, email: payload.email, role: payload.role};

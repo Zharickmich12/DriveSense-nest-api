@@ -5,11 +5,11 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/users/entities/user.entity';
-import { CreateUserDTO } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 /**
  * @class AuthService
- * @description Servicio que gestiona el registro, autenticación y generación de tokens JWT.
+ * @description Service that handles user registration, authentication, and JWT token generation.
  */
 @Injectable()
 export class AuthService {
@@ -20,36 +20,36 @@ export class AuthService {
     ) { }
 
     /**
-    * @method register
-    * @description Registra un nuevo usuario cifrando su contraseña.
-    * @param data - Datos del usuario a registrar.
-    * @returns Mensaje de confirmación y datos básicos del usuario creado.
-    */
-    async register(data: CreateUserDTO) {
+     * @method register
+     * @description Registers a new user by hashing their password.
+     * @param data - User data to register.
+     * @returns Confirmation message and basic data of the created user.
+     */
+    async register(data: CreateUserDto) {
         const hashedPassword = await bcrypt.hash(data.password, 10);
         const userCreated = this.userRepo.create({ ...data, password: hashedPassword });
         await this.userRepo.save(userCreated);
-        return { message: 'Usuario registrado correctamente', user: { id: userCreated.id, email: userCreated.email } };
+        return { message: 'User registered successfully', user: { id: userCreated.id, email: userCreated.email } };
     }
 
     /**
-    * @method login
-    * @description Verifica credenciales y genera token JWT.
-    * @param data - Datos de inicio de sesión.
-    * @returns Token de acceso JWT.
-    * @throws UnauthorizedException - Si las credenciales no son válidas.
-    */
+     * @method login
+     * @description Validates credentials and generates JWT token.
+     * @param data - Login credentials.
+     * @returns JWT access token.
+     * @throws UnauthorizedException - If credentials are invalid.
+     */
     async login(data: LoginDTO) {
         const user = await this.userRepo.findOne({ where: { email: data.email } });
 
         if (!user) {
-            throw new UnauthorizedException('Usuario o contraseña inválidos');
+            throw new UnauthorizedException('Invalid email or password');
         }
 
         const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
         if (!isPasswordValid) {
-            throw new UnauthorizedException('Usuario o contraseña inválidos');
+            throw new UnauthorizedException('Invalid email or password');
         }
 
         const payloadToken = { sub: user.id, email: user.email, name: user.name, role: user.role };

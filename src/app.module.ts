@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import typeOrmConfig from '../typeorm.config'; // porque está fuera de src/
+import typeOrmConfig from '../typeorm.config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -13,7 +13,7 @@ import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(typeOrmConfig), // ✅ ya no usa .options
+    TypeOrmModule.forRoot(typeOrmConfig),
     AuthModule,
     UsersModule,
     CityModule,

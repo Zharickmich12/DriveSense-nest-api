@@ -4,6 +4,6 @@ export class LoginDTO {
     @IsEmail()
     email: string;
 
-    @Length(8, 32, {message: 'La contraseña no tiene el número de caracteres requerido'})
+    @Length(8, 32, {message: 'Password must be between 8 and 32 characters'})
     password: string;
 }

@@ -11,7 +11,7 @@ const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.DB_NAME || 'drivesensedb',
   entities: [__dirname + '/src/**/*.entity{.ts,.js}'], 
   migrations: [__dirname + '/src/migrations/*{.ts,.js}'],
-  synchronize: false,
+  synchronize: true,
   logging: true,
 };
 

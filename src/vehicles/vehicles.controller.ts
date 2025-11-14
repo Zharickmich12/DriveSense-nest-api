@@ -1,34 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('vehicles')
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
   @Post()
-  create(@Body() createVehicleDto: CreateVehicleDto) {
-    return this.vehiclesService.create(createVehicleDto);
+  create(@Body() data: CreateVehicleDto, @Request() req) {
+    return this.vehiclesService.create(data, req.user);
   }
 
   @Get()
-  findAll() {
-    return this.vehiclesService.findAll();
+  findAll(@Request() req) {
+    return this.vehiclesService.findAll(req.user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.vehiclesService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.vehiclesService.findOne(id, req.user);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateVehicleDto: UpdateVehicleDto) {
-    return this.vehiclesService.update(+id, updateVehicleDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() data: UpdateVehicleDto, @Request() req) {
+    return this.vehiclesService.update(id, data, req.user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.vehiclesService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.vehiclesService.remove(id, req.user);
   }
 }

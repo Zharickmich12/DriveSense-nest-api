@@ -2,6 +2,11 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 
 export type UserRole = 'admin' | 'user';
 
+export enum RolesEnum {
+   ADMIN = 'admin',
+   USER = 'user'
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()

@@ -12,12 +12,6 @@ export class UsersService {
     @InjectRepository(User) private usersRepo: Repository<User>,
   ) {}
 
-  async create(dto: CreateUserDto): Promise<User> {
-    const hashed = await bcrypt.hash(dto.password, 10);
-    const user = this.usersRepo.create({ ...dto, password: hashed });
-    return this.usersRepo.save(user);
-  }
-
   findAll(limit = 10, page = 1) {
     return this.usersRepo.find({
       take: limit,

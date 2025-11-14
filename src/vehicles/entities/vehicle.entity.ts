@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
 export type VehicleType = 'car' | 'motorcycle';

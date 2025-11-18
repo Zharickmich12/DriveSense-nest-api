@@ -27,7 +27,9 @@ export class AuthService {
      */
     async register(data: CreateUserDto) {
         const hashedPassword = await bcrypt.hash(data.password, 10);
-        const userCreated = this.userRepo.create({ ...data, password: hashedPassword });
+        const userCreated = this.userRepo.create({ ...data, 
+            role: data.role ?? 'user',
+            password: hashedPassword });
         await this.userRepo.save(userCreated);
         return { message: 'User registered successfully', user: { id: userCreated.id, email: userCreated.email } };
     }

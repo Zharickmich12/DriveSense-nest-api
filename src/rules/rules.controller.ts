@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, BadRequestException, Req } from '@nestjs/common';
 import { RulesService } from './rules.service';
 import { CreateRuleDto } from './dto/create-rule.dto';
 import { UpdateRuleDto } from './dto/update-rule.dto';
@@ -6,6 +6,8 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesEnum } from '../users/entities/user.entity';
+import { CheckCirculationDto } from './dto/check-circulation.dto';
+import { CheckWeekDto } from './dto/check-week.dto';
 
 @Controller('rules')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,25 +24,6 @@ export class RulesController {
     return this.rulesService.create(createRuleDto);
   }
 
-
-@Post('check')
-checkRule(@Body() data: { plate: string, cityId: number, date: string }) {
-  const { plate, cityId, date } = data;
-  
-  if (!plate || !cityId || !date) {
-      throw new BadRequestException({
-        es: 'Debes enviar plate, cityId y date.',
-        en: 'You must provide plate, cityId and date.',
-      });
-  }
-  
-  return this.rulesService.checkCirculation(
-    plate,
-    Number(cityId),
-    date,
-    false, 
-  );
-}
 
 
   @Get()
@@ -68,50 +51,37 @@ checkRule(@Body() data: { plate: string, cityId: number, date: string }) {
   }
 
   // ==========================================================
-  // 🔵 CONSULTA POR DÍA (POST /rules/day)
+  //  CONSULTA POR DÍA (POST /rules/check)
   // ==========================================================
-  @Post('day')
-  async checkByDay(@Body() body: any) {
-    const { plate, cityId, date } = body;
+@Post('check')
+@Roles(RolesEnum.ADMIN, RolesEnum.USER)
+checkRule(@Req() req, @Body() dto: CheckWeekDto) {
+  const user = req.user;
 
-    // Validaciones
-    if (!plate || !cityId || !date) {
-      throw new BadRequestException({
-        es: 'Debes enviar plate, cityId y date.',
-        en: 'You must provide plate, cityId and date.',
-      });
-    }
+  return this.rulesService.checkCirculation(
+    dto.plate,
+    dto.cityId,
+    dto.date ?? new Date().toISOString(),
+    user,
+    false,
+  );
+}
 
-    // Consultar por un día específico
-    return this.rulesService.checkCirculation(
-      plate,
-      Number(cityId),
-      date,
-      false, // fullWeek = false
-    );
-  }
 
-  // ==========================================================
-  // 🔵 CONSULTA SEMANAL (POST /rules/week)
-  // ==========================================================
-  @Post('week')
-  async checkByWeek(@Body() body: any) {
-    const { plate, cityId } = body;
+@Post('week')
+@Roles(RolesEnum.ADMIN, RolesEnum.USER)
+checkByWeek(@Req() req, @Body() dto: CheckWeekDto) {
+  const user = req.user;
 
-    // Validaciones
-    if (!plate || !cityId) {
-      throw new BadRequestException({
-        es: 'Debes enviar plate y cityId.',
-        en: 'You must provide plate and cityId.',
-      });
-    }
+return this.rulesService.checkCirculation(
+    dto.plate,
+    dto.cityId,
+    dto.date ?? new Date().toISOString(),
+    user,
+    true,   // este sí debería ser TRUE para semana
+);
 
-    // Consultar semana completa
-    return this.rulesService.checkCirculation(
-      plate,
-      Number(cityId),
-      undefined,
-      true, // fullWeek = true
-    );
-  }
+
+}
+
 }

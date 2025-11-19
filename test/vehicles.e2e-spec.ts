@@ -1,22 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest'; // IMPORTACIÓN CORRECTA
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { VehiclesModule } from '../src/vehicles/vehicles.module';
 import { Vehicle } from '../src/vehicles/entities/vehicle.entity';
-import { User } from '../src/users/entities/user.entity';
+import { RolesEnum, User, UserRole } from '../src/users/entities/user.entity';
 
 describe('VehiclesController (e2e)', () => {
   let app: INestApplication;
   let jwtService: JwtService;
 
-  const mockUser: User = {
+  const mockUser: Partial<User> = {
     id: 1,
     email: 'test@example.com',
     name: 'Test User',
-    role: 'user',
-  } as User;
+    role: RolesEnum.ADMIN,
+  };
 
   const mockVehicle = {
     id: 1,
@@ -57,7 +57,11 @@ describe('VehiclesController (e2e)', () => {
   });
 
   const generateToken = (user: Partial<User>) => {
-    return jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    return jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
   };
 
   describe('/vehicles (POST)', () => {
@@ -102,22 +106,27 @@ describe('VehiclesController (e2e)', () => {
     });
   });
 
-  describe('/vehicles (GET)', () => {
-    it('should return vehicles for admin', async () => {
-      const adminUser = { ...mockUser, role: 'admin' };
-      const token = generateToken(adminUser);
-      const vehicles = [mockVehicle];
+ describe('/vehicles (GET)', () => {
+  it('should return vehicles for admin', async () => {
+    const adminUser: Partial<User> = { 
+      ...mockUser, 
+      role: 'admin' as UserRole   // <-- FIX
+    };
 
-      mockVehicleRepository.find.mockResolvedValue(vehicles);
+    const token = generateToken(adminUser);
+    const vehicles = [mockVehicle];
 
-      return request(app.getHttpServer())
-        .get('/vehicles')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200)
-        .expect(res => {
-          expect(Array.isArray(res.body)).toBe(true);
-          expect(res.body.length).toBe(1);
-        });
-    });
+    mockVehicleRepository.find.mockResolvedValue(vehicles);
+
+    return request(app.getHttpServer())
+      .get('/vehicles')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect(res => {
+        expect(Array.isArray(res.body)).toBe(true);
+        expect(res.body.length).toBe(1);
+      });
   });
 });
+}
+)

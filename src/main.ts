@@ -5,8 +5,8 @@ import { AllExceptionsFilter } from './common/filters/global-exception.filter';
 import * as swaggerUi from 'swagger-ui-express';
 import * as YAML from 'yamljs';
 import { join } from 'path';
-import { LogsService } from 'logss/logs.service';
-import { LoggingInterceptor } from 'common/interceptors/login.interceptor';
+import { LogsService } from './logss/logs.service';
+import { LoggingInterceptor } from './common/interceptors/login.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -12,17 +12,22 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
-  @Post()
-  @Roles(RolesEnum.USER)
-  create(@Body() createVehicleDto: CreateVehicleDto, @Request() req) {
-    return this.vehiclesService.create(createVehicleDto, req.user);
-  }
+@Post()
+@Roles(RolesEnum.USER, RolesEnum.ADMIN)
+create(
+  @Body() createVehicleDto: CreateVehicleDto,
+  @Request() req
+) {
+  // req.user contiene el usuario autenticado
+  return this.vehiclesService.create(createVehicleDto, req.user);
+}
 
-  @Get()
-  @Roles(RolesEnum.ADMIN)
-  findAll(@Request() req) {
-    return this.vehiclesService.findAll(req.user);
-  }
+
+@Get()
+@Roles(RolesEnum.USER, RolesEnum.ADMIN)
+findAll(@Request() req) {
+  return this.vehiclesService.findAll(req.user);
+}
 
   @Get(':id')
   @Roles(RolesEnum.ADMIN, RolesEnum.USER)
@@ -30,15 +35,19 @@ export class VehiclesController {
     return this.vehiclesService.findOne(id, req.user);
   }
 
-  @Patch(':id')
-  @Roles(RolesEnum.ADMIN)
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateVehicleDto: UpdateVehicleDto, @Request() req) {
-    return this.vehiclesService.update(id, updateVehicleDto, req.user);
-  }
+@Patch(':id')
+@Roles(RolesEnum.ADMIN, RolesEnum.USER)
+update(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() updateVehicleDto: UpdateVehicleDto,
+  @Request() req
+) {
+  return this.vehiclesService.update(id, updateVehicleDto, req.user);
+}
 
-  @Delete(':id')
-  @Roles(RolesEnum.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.vehiclesService.remove(id, req.user);
-  }
+@Delete(':id')
+@Roles(RolesEnum.ADMIN, RolesEnum.USER)
+remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  return this.vehiclesService.remove(id, req.user);
+}
 }

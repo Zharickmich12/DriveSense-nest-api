@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 export type UserRole = 'admin' | 'user';
 
@@ -18,7 +19,9 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+
   @Column()
+  @Exclude()
   password: string; // hashed password
 
   @Column({ type: 'varchar', default: 'user' })

@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,  UpdateDateColumn} from "typeorm";
+import { Log } from "../../logs/entities/log.entity";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,  UpdateDateColumn, OneToMany} from "typeorm";
 
 @Entity('cities')
 export class City {
@@ -20,4 +21,7 @@ export class City {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @OneToMany(() => Log, (log) => log.city)
+    logs: Log[];
 }

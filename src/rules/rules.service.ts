@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Rule } from './entities/rule.entity';
 import { City } from '../city/entities/city.entity';
 import { Repository } from 'typeorm';
-import { LogsService } from '../logs/logs.service';
+import { LogsService } from '../logss/logs.service';
 import { Vehicle } from '../vehicles/entities/vehicle.entity';
 
 @Injectable()

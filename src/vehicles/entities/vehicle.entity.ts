@@ -8,7 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { Log } from '../../logs/entities/log.entity';
+import { Log } from '../../logss/entities/log.entity';
 
 export type VehicleType = 'car' | 'motorcycle';
 

@@ -1,4 +1,4 @@
-import { Log } from "../../logs/entities/log.entity";
+import { Log } from "../../logss/entities/log.entity";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,  UpdateDateColumn, OneToMany} from "typeorm";
 
 @Entity('cities')

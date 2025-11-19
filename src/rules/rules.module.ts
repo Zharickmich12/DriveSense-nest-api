@@ -4,7 +4,7 @@ import { RulesController } from './rules.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Rule} from './entities/rule.entity';
 import { City } from '../city/entities/city.entity';
-import { LogsModule } from '../logs/logs.module';
+import { LogsModule } from '../logss/logs.module';
 import { Vehicle } from 'vehicles/entities/vehicle.entity';
 
 @Module({

@@ -10,6 +10,9 @@ import { CityModule } from './city/city.module';
 import { RulesModule } from './rules/rules.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { CommonModule } from './common/common.module';
+import { LogsModule } from './logs/logs.module';
+import { LoggingInterceptor } from 'common/interceptors/login.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -20,8 +23,14 @@ import { CommonModule } from './common/common.module';
     RulesModule,
     VehiclesModule,
     CommonModule,
+    LogsModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}

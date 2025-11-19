@@ -5,6 +5,9 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesEnum } from './entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+
+
 
 // TODO: cuando auth esté listo, usar guards y roles, por ejemplo @UseGuards(AuthGuard, RolesGuard)
 // y proteger las rutas para que solo admin pueda listar/eliminar.
@@ -13,6 +16,10 @@ import { RolesEnum } from './entities/user.entity';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+
+ 
+
 
   @Get()
   @Roles(RolesEnum.ADMIN)

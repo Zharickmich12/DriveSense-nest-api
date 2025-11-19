@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { City } from '../../city/entities/city.entity';
+
 @Entity('rules')
 export class Rule {
 

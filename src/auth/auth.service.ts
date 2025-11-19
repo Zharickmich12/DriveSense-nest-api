@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/users/entities/user.entity';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { EmailDuplicateException } from 'src/common/exceptions/users/email-duplicate.exception';
 
 /**
  * @class AuthService
@@ -25,14 +26,37 @@ export class AuthService {
      * @param data - User data to register.
      * @returns Confirmation message and basic data of the created user.
      */
-    async register(data: CreateUserDto) {
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        const userCreated = this.userRepo.create({ ...data, 
-            role: data.role ?? 'user',
-            password: hashedPassword });
-        await this.userRepo.save(userCreated);
-        return { message: 'User registered successfully', user: { id: userCreated.id, email: userCreated.email } };
+   async register(data: CreateUserDto) {
+  try {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const userCreated = this.userRepo.create({
+      ...data,
+      role: data.role ?? 'user',
+      password: hashedPassword,
+    });
+
+    await this.userRepo.save(userCreated);
+
+    return {
+      message: 'User registered successfully',
+      user: {
+        id: userCreated.id,
+        email: userCreated.email,
+      },
+    };
+
+  } catch (error) {
+   
+    if (error.code === 'ER_DUP_ENTRY') {
+      throw new EmailDuplicateException(); 
     }
+
+    
+    throw new Error('Unexpected error during registration');
+  }
+}
+
 
     /**
      * @method login

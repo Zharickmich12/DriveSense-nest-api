@@ -11,11 +11,11 @@ import {
 import { RulesService } from './rules.service';
 import { CreateRuleDto } from './dto/create-rule.dto';
 import { UpdateRuleDto } from './dto/update-rule.dto';
-import { JwtAuthGuard } from 'src/auth/jwt.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { RolesEnum } from 'src/users/entities/user.entity';
 import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesEnum } from '../users/entities/user.entity';
 
 @Controller('rules')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -31,6 +31,27 @@ export class RulesController {
   create(@Body() createRuleDto: CreateRuleDto) {
     return this.rulesService.create(createRuleDto);
   }
+
+
+@Post('check')
+checkRule(@Body() data: { plate: string, cityId: number, date: string }) {
+  const { plate, cityId, date } = data;
+  
+  if (!plate || !cityId || !date) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate, cityId y date.',
+        en: 'You must provide plate, cityId and date.',
+      });
+  }
+  
+  return this.rulesService.checkCirculation(
+    plate,
+    Number(cityId),
+    date,
+    false, 
+  );
+}
+
 
   @Get()
   @Roles(RolesEnum.ADMIN)

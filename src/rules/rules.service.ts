@@ -3,30 +3,47 @@ import { CreateRuleDto } from './dto/create-rule.dto';
 import { UpdateRuleDto } from './dto/update-rule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Rule } from './entities/rule.entity';
-import { City } from 'src/city/entities/city.entity';
+import { City } from '../city/entities/city.entity';
 import { Repository } from 'typeorm';
+import { LogsService } from '../logs/logs.service';
+import { Vehicle } from '../vehicles/entities/vehicle.entity';
 
 @Injectable()
 export class RulesService {
 
-  constructor(
+   constructor(
     @InjectRepository(Rule)
     private readonly ruleRepository: Repository<Rule>,
+
+    @InjectRepository(Vehicle)
+    private readonly vehicleRepository: Repository<Vehicle>,
     @InjectRepository(City)
     private readonly cityRepository: Repository<City>,
+    private readonly logsService: LogsService
   ) {}
 
-  // ===========================================================
-  // 🔵 CRUD
-  // ===========================================================
-
   async create(createRuleDto: CreateRuleDto) {
-    const { cityId, ...data } = createRuleDto;
+    const { cityId, dayOfWeek,...data } = createRuleDto;
     const city = await this.cityRepository.findOneBy({ id: cityId });
 
-    if (!city) throw new NotFoundException(`The city with id ${cityId} was not found.`);
+    if (!city) throw new NotFoundException(`The city with id ${cityId} was not found. `);
 
-    const rule = this.ruleRepository.create({ ...data, city });
+    const existingRule = await this.ruleRepository.findOne({
+      where: {
+        city: { id: cityId },
+        dayOfWeek: dayOfWeek,
+      },
+      relations: ['city'],
+    });
+
+    if (existingRule) {
+      throw new BadRequestException(
+        `Ya existe una regla para el día ${dayOfWeek} en esta ciudad.`,
+      );
+    }
+
+
+    const rule = this.ruleRepository.create({ ...data,dayOfWeek, city });
     await this.ruleRepository.save(rule);
 
     return {
@@ -48,13 +65,13 @@ export class RulesService {
       where: { id },
       relations: ['city'],
     });
-
     if (!rule) throw new NotFoundException(`The rule with id ${id} was not found.`);
     return rule;
   }
 
   async update(id: number, updateRuleDto: UpdateRuleDto) {
-    const rule = await this.ruleRepository.findOne({ where: { id } });
+    const rule = await this.ruleRepository.findOne({ where: { id },
+      relations: ['city'],});
     if (!rule) throw new NotFoundException(`The rule with id ${id} was not found.`);
 
     Object.assign(rule, updateRuleDto);
@@ -104,19 +121,19 @@ export class RulesService {
     // ----------------------------
     const city = await this.cityRepository.findOne({ where: { id: cityId } });
 
-    if (!city) {
+        if (!city) {
       throw new NotFoundException({
         es: `La ciudad con ID ${cityId} no existe.`,
         en: `City with ID ${cityId} does not exist.`,
       });
-    }
+        }
 
     // ----------------------------
     // 3. Obtener reglas activas
     // ----------------------------
     const rules = await this.ruleRepository.find({
       where: { city: { id: cityId }, isActive: true },
-    });
+        });
 
     if (rules.length === 0) {
       return {
@@ -151,7 +168,7 @@ export class RulesService {
       throw new BadRequestException({
         es: 'Formato de fecha inválido.',
         en: 'Invalid date format.',
-      });
+        });
     }
 
     return this.evaluateSingleDay(lastDigit, selectedDate, rules);

@@ -5,8 +5,10 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Log } from '../../logs/entities/log.entity';
 
 export type VehicleType = 'car' | 'motorcycle';
 
@@ -38,4 +40,7 @@ export class Vehicle {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Log, (log) => log.vehicle)
+  logs: Log[];
 }

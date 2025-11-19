@@ -7,7 +7,7 @@ describe('JwtStrategy', () => {
   let configService: ConfigService;
 
   const mockConfigService = {
-    get: jest.fn(),
+    get: jest.fn().mockReturnValue('test-secret'), // RETORNO POR DEFECTO
   };
 
   beforeEach(async () => {
@@ -30,13 +30,7 @@ describe('JwtStrategy', () => {
       expect(strategy).toBeDefined();
     });
 
-    it('should configure JWT options correctly', () => {
-      const jwtSecret = 'test-secret';
-      mockConfigService.get.mockReturnValue(jwtSecret);
-
-      // Re-instantiate to test constructor
-      const newStrategy = new JwtStrategy(configService);
-
+    it('should read JWT secret from config service', () => {
       expect(mockConfigService.get).toHaveBeenCalledWith('JWT_SECRET_KEY');
     });
   });
@@ -46,7 +40,7 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 1,
         email: 'test@example.com',
-        role: 'user'
+        role: 'user',
       };
 
       const result = await strategy.validate(payload);
@@ -54,16 +48,16 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         id: payload.sub,
         email: payload.email,
-        role: payload.role
+        role: payload.role,
       });
     });
 
-    it('should handle different payload structures', async () => {
+    it('should ignore extra fields in payload', async () => {
       const payload = {
         sub: 2,
         email: 'admin@example.com',
         role: 'admin',
-        extraField: 'should-be-ignored'
+        extraField: 'ignored',
       };
 
       const result = await strategy.validate(payload);
@@ -71,8 +65,9 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         id: payload.sub,
         email: payload.email,
-        role: payload.role
+        role: payload.role,
       });
+
       expect((result as any).extraField).toBeUndefined();
     });
   });

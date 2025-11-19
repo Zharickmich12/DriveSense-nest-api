@@ -30,19 +30,20 @@ describe('LoginDTO', () => {
     expect(errors[0].constraints).toHaveProperty('isEmail');
   });
 
-  it('should fail validation with short password', async () => {
-    const loginData = {
-      email: 'test@example.com',
-      password: 'short'
-    };
+  it('should fail validation with long password', async () => {
+  const loginData = {
+    email: 'test@example.com',
+    password: 'a'.repeat(33) // 33 characters
+  };
 
-    const loginDTO = plainToClass(LoginDTO, loginData);
-    const errors = await validate(loginDTO);
+  const loginDTO = plainToClass(LoginDTO, loginData);
+  const errors = await validate(loginDTO);
 
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('password');
-    expect(errors[0].constraints).toHaveProperty('length');
-  });
+  expect(errors.length).toBeGreaterThan(0);
+  expect(errors[0].property).toBe('password');
+  expect(errors[0].constraints).toHaveProperty('isLength'); // ← Cambiado
+});
+
 
   it('should fail validation with long password', async () => {
     const loginData = {

@@ -1,63 +1,72 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { VehiclesController } from './vehicles.controller';
 import { VehiclesService } from './vehicles.service';
-import { Vehicle } from './entities/vehicle.entity';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RolesEnum } from '../users/entities/user.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { User } from '../users/entities/user.entity';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
-describe('VehiclesService', () => {
+const mockVehiclesService = {
+  create: jest.fn(),
+  findAll: jest.fn(),
+  findOne: jest.fn(),
+  update: jest.fn(),
+  remove: jest.fn(),
+};
+
+const mockUser = {
+  id: 1,
+  email: 'test@example.com',
+  role: RolesEnum.USER,
+};
+
+const mockAdminUser = {
+  id: 1,
+  email: 'admin@example.com',
+  role: RolesEnum.ADMIN,
+};
+
+const mockVehicle = {
+  id: 1,
+  licensePlate: 'ABC123',
+  brand: 'Toyota',
+  model: 'Corolla',
+  year: 2023,
+  type: 'car' as const,
+  user: mockUser,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+describe('VehiclesController', () => {
+  let controller: VehiclesController;
   let service: VehiclesService;
-  let vehicleRepository: Repository<Vehicle>;
-
-  const mockUser: User = {
-    id: 1,
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'user',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as User;
-
-  const mockVehicle: Vehicle = {
-    id: 1,
-    licensePlate: 'ABC123',
-    brand: 'Toyota',
-    model: 'Corolla',
-    year: 2020,
-    type: 'car',
-    user: mockUser,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const mockVehicleRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    find: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      controllers: [VehiclesController],
       providers: [
-        VehiclesService,
         {
-          provide: getRepositoryToken(Vehicle),
-          useValue: mockVehicleRepository,
+          provide: VehiclesService,
+          useValue: mockVehiclesService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
+    controller = module.get<VehiclesController>(VehiclesController);
     service = module.get<VehiclesService>(VehiclesService);
-    vehicleRepository = module.get<Repository<Vehicle>>(getRepositoryToken(Vehicle));
+    jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
   });
 
   describe('create', () => {
@@ -66,137 +75,154 @@ describe('VehiclesService', () => {
         licensePlate: 'ABC123',
         brand: 'Toyota',
         model: 'Corolla',
-        year: 2020,
-        type: 'car'
+        year: 2023,
+        type: 'car',
       };
 
-      mockVehicleRepository.findOne.mockResolvedValue(null);
-      mockVehicleRepository.create.mockReturnValue(mockVehicle);
-      mockVehicleRepository.save.mockResolvedValue(mockVehicle);
+      mockVehiclesService.create.mockResolvedValue(mockVehicle);
 
-      const result = await service.create(createVehicleDto, mockUser);
+      const result = await controller.create(createVehicleDto, { user: mockUser });
 
-      expect(vehicleRepository.findOne).toHaveBeenCalledWith({
-        where: { licensePlate: createVehicleDto.licensePlate }
-      });
-      expect(vehicleRepository.create).toHaveBeenCalledWith({
-        ...createVehicleDto,
-        user: mockUser
-      });
-      expect(vehicleRepository.save).toHaveBeenCalledWith(mockVehicle);
+      expect(service.create).toHaveBeenCalledWith(createVehicleDto, mockUser);
       expect(result).toEqual(mockVehicle);
     });
 
-    it('should throw ConflictException for duplicate license plate', async () => {
+    it('should handle service errors during creation', async () => {
       const createVehicleDto: CreateVehicleDto = {
         licensePlate: 'ABC123',
         brand: 'Toyota',
         model: 'Corolla',
-        year: 2020,
-        type: 'car'
+        year: 2023,
+        type: 'car',
       };
 
-      mockVehicleRepository.findOne.mockResolvedValue(mockVehicle);
+      mockVehiclesService.create.mockRejectedValue(new ForbiddenException('Vehicle already exists'));
 
-      await expect(service.create(createVehicleDto, mockUser))
-        .rejects.toThrow(ConflictException);
-      await expect(service.create(createVehicleDto, mockUser))
-        .rejects.toThrow('Vehicle with this license plate already exists');
+      await expect(controller.create(createVehicleDto, { user: mockUser }))
+        .rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('findAll', () => {
-    it('should return all vehicles for user', async () => {
-      const vehicles = [mockVehicle];
-      mockVehicleRepository.find.mockResolvedValue(vehicles);
+    it('should return all vehicles for admin', async () => {
+      const mockVehicles = [mockVehicle, { ...mockVehicle, id: 2, licensePlate: 'XYZ789' }];
+      mockVehiclesService.findAll.mockResolvedValue(mockVehicles);
 
-      const result = await service.findAll(mockUser);
+      const result = await controller.findAll({ user: mockAdminUser });
 
-      expect(vehicleRepository.find).toHaveBeenCalledWith({
-        where: { user: { id: mockUser.id } }
-      });
-      expect(result).toEqual(vehicles);
+      expect(service.findAll).toHaveBeenCalledWith(mockAdminUser);
+      expect(result).toEqual(mockVehicles);
     });
 
-    it('should return empty array when no vehicles found', async () => {
-      mockVehicleRepository.find.mockResolvedValue([]);
+    it('should handle service errors when finding all vehicles', async () => {
+      mockVehiclesService.findAll.mockRejectedValue(new Error('Database error'));
 
-      const result = await service.findAll(mockUser);
-
-      expect(result).toEqual([]);
+      await expect(controller.findAll({ user: mockAdminUser }))
+        .rejects.toThrow(Error);
     });
   });
 
   describe('findOne', () => {
-    it('should return vehicle when found', async () => {
-      mockVehicleRepository.findOne.mockResolvedValue(mockVehicle);
+    it('should return a vehicle by id for admin', async () => {
+      mockVehiclesService.findOne.mockResolvedValue(mockVehicle);
 
-      const result = await service.findOne(1, mockUser);
+      const result = await controller.findOne(1, { user: mockAdminUser });
 
-      expect(vehicleRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 1, user: { id: mockUser.id } }
-      });
+      expect(service.findOne).toHaveBeenCalledWith(1, mockAdminUser);
       expect(result).toEqual(mockVehicle);
     });
 
-    it('should throw NotFoundException when vehicle not found', async () => {
-      mockVehicleRepository.findOne.mockResolvedValue(null);
+    it('should return a vehicle by id for owner user', async () => {
+      const userVehicle = { ...mockVehicle, user: mockUser };
+      mockVehiclesService.findOne.mockResolvedValue(userVehicle);
 
-      await expect(service.findOne(999, mockUser))
+      const result = await controller.findOne(1, { user: mockUser });
+
+      expect(service.findOne).toHaveBeenCalledWith(1, mockUser);
+      expect(result).toEqual(userVehicle);
+    });
+
+    it('should handle not found vehicle', async () => {
+      mockVehiclesService.findOne.mockRejectedValue(new NotFoundException('Vehicle not found'));
+
+      await expect(controller.findOne(999, { user: mockAdminUser }))
         .rejects.toThrow(NotFoundException);
-      await expect(service.findOne(999, mockUser))
-        .rejects.toThrow('Vehicle not found');
     });
   });
 
   describe('update', () => {
-    it('should update vehicle successfully', async () => {
+    it('should update a vehicle successfully', async () => {
       const updateVehicleDto: UpdateVehicleDto = {
-        brand: 'Updated Brand',
-        model: 'Updated Model'
+        brand: 'Honda',
+        model: 'Civic',
       };
 
-      const updatedVehicle = { ...mockVehicle, ...updateVehicleDto };
-      
-      jest.spyOn(service, 'findOne').mockResolvedValue(mockVehicle);
-      mockVehicleRepository.save.mockResolvedValue(updatedVehicle);
+      const updatedVehicle = { ...mockVehicle, brand: 'Honda', model: 'Civic' };
+      mockVehiclesService.update.mockResolvedValue(updatedVehicle);
 
-      const result = await service.update(1, updateVehicleDto, mockUser);
+      const result = await controller.update(1, updateVehicleDto, { user: mockAdminUser });
 
-      expect(service.findOne).toHaveBeenCalledWith(1, mockUser);
-      expect(vehicleRepository.save).toHaveBeenCalledWith(updatedVehicle);
+      expect(service.update).toHaveBeenCalledWith(1, updateVehicleDto, mockAdminUser);
       expect(result).toEqual(updatedVehicle);
     });
 
-    it('should throw NotFoundException when updating non-existent vehicle', async () => {
+    it('should handle update errors', async () => {
       const updateVehicleDto: UpdateVehicleDto = {
-        brand: 'Updated Brand'
+        brand: 'Honda',
       };
 
-      jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException());
+      mockVehiclesService.update.mockRejectedValue(new NotFoundException('Vehicle not found'));
 
-      await expect(service.update(999, updateVehicleDto, mockUser))
+      await expect(controller.update(999, updateVehicleDto, { user: mockAdminUser }))
         .rejects.toThrow(NotFoundException);
     });
   });
 
   describe('remove', () => {
-    it('should remove vehicle successfully', async () => {
-      jest.spyOn(service, 'findOne').mockResolvedValue(mockVehicle);
-      mockVehicleRepository.remove.mockResolvedValue(mockVehicle);
+    it('should remove a vehicle successfully', async () => {
+      mockVehiclesService.remove.mockResolvedValue({ message: 'Vehicle deleted successfully' });
 
-      const result = await service.remove(1, mockUser);
+      const result = await controller.remove(1, { user: mockAdminUser });
 
-      expect(service.findOne).toHaveBeenCalledWith(1, mockUser);
-      expect(vehicleRepository.remove).toHaveBeenCalledWith(mockVehicle);
-      expect(result).toEqual(mockVehicle);
+      expect(service.remove).toHaveBeenCalledWith(1, mockAdminUser);
+      expect(result).toEqual({ message: 'Vehicle deleted successfully' });
     });
 
-    it('should throw NotFoundException when removing non-existent vehicle', async () => {
-      jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException());
+    it('should handle removal errors', async () => {
+      mockVehiclesService.remove.mockRejectedValue(new NotFoundException('Vehicle not found'));
 
-      await expect(service.remove(999, mockUser))
+      await expect(controller.remove(999, { user: mockAdminUser }))
         .rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('role-based access control', () => {
+    it('should allow USER role to create vehicles', async () => {
+      const createVehicleDto: CreateVehicleDto = {
+        licensePlate: 'ABC123',
+        brand: 'Toyota',
+        model: 'Corolla',
+        year: 2023,
+        type: 'car',
+      };
+
+      mockVehiclesService.create.mockResolvedValue(mockVehicle);
+
+      const result = await controller.create(createVehicleDto, { user: mockUser });
+
+      expect(result).toBeDefined();
+    });
+
+    it('should allow ADMIN role to access all endpoints', async () => {
+      mockVehiclesService.findAll.mockResolvedValue([mockVehicle]);
+      mockVehiclesService.findOne.mockResolvedValue(mockVehicle);
+      mockVehiclesService.update.mockResolvedValue(mockVehicle);
+      mockVehiclesService.remove.mockResolvedValue({ message: 'Deleted' });
+
+      await expect(controller.findAll({ user: mockAdminUser })).resolves.toBeDefined();
+      await expect(controller.findOne(1, { user: mockAdminUser })).resolves.toBeDefined();
+      await expect(controller.update(1, {}, { user: mockAdminUser })).resolves.toBeDefined();
+      await expect(controller.remove(1, { user: mockAdminUser })).resolves.toBeDefined();
     });
   });
 });

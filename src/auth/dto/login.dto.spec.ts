@@ -13,7 +13,7 @@ describe('LoginDTO', () => {
     const errors = await validate(loginDTO);
 
     expect(errors.length).toBe(0);
-    expect(loginDTO.email).toBe('test@example.com'); // Should be transformed to lowercase
+    expect(loginDTO.email).toBe('test@example.com'); 
   });
 
   it('should fail validation with invalid email', async () => {
@@ -30,20 +30,19 @@ describe('LoginDTO', () => {
     expect(errors[0].constraints).toHaveProperty('isEmail');
   });
 
-  it('should fail validation with long password', async () => {
-  const loginData = {
-    email: 'test@example.com',
-    password: 'a'.repeat(33) // 33 characters
-  };
+  it('should fail validation with short password', async () => {
+    const loginData = {
+      email: 'test@example.com',
+      password: 'short'
+    };
 
-  const loginDTO = plainToClass(LoginDTO, loginData);
-  const errors = await validate(loginDTO);
+    const loginDTO = plainToClass(LoginDTO, loginData);
+    const errors = await validate(loginDTO);
 
-  expect(errors.length).toBeGreaterThan(0);
-  expect(errors[0].property).toBe('password');
-  expect(errors[0].constraints).toHaveProperty('isLength'); // ← Cambiado
-});
-
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].property).toBe('password');
+    expect(errors[0].constraints).toHaveProperty('isLength');
+  });
 
   it('should fail validation with long password', async () => {
     const loginData = {
@@ -56,7 +55,7 @@ describe('LoginDTO', () => {
 
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('password');
-    expect(errors[0].constraints).toHaveProperty('length');
+    expect(errors[0].constraints).toHaveProperty('isLength');
   });
 
   it('should transform email to lowercase', () => {

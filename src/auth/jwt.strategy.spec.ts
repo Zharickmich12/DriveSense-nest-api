@@ -2,15 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 
+const mockConfigService = {
+  get: jest.fn(),
+};
+
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
-  let configService: ConfigService;
-
-  const mockConfigService = {
-    get: jest.fn().mockReturnValue('test-secret'), // RETORNO POR DEFECTO
-  };
 
   beforeEach(async () => {
+    mockConfigService.get.mockReturnValue('test-secret-key'); 
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         JwtStrategy,
@@ -22,7 +23,10 @@ describe('JwtStrategy', () => {
     }).compile();
 
     strategy = module.get<JwtStrategy>(JwtStrategy);
-    configService = module.get<ConfigService>(ConfigService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('constructor', () => {
@@ -30,7 +34,7 @@ describe('JwtStrategy', () => {
       expect(strategy).toBeDefined();
     });
 
-    it('should read JWT secret from config service', () => {
+    it('should configure JWT options correctly', () => {
       expect(mockConfigService.get).toHaveBeenCalledWith('JWT_SECRET_KEY');
     });
   });
@@ -40,7 +44,7 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 1,
         email: 'test@example.com',
-        role: 'user',
+        role: 'user'
       };
 
       const result = await strategy.validate(payload);
@@ -48,16 +52,16 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         id: payload.sub,
         email: payload.email,
-        role: payload.role,
+        role: payload.role
       });
     });
 
-    it('should ignore extra fields in payload', async () => {
+    it('should handle different payload structures', async () => {
       const payload = {
         sub: 2,
         email: 'admin@example.com',
         role: 'admin',
-        extraField: 'ignored',
+        extraField: 'should-be-ignored'
       };
 
       const result = await strategy.validate(payload);
@@ -65,9 +69,8 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         id: payload.sub,
         email: payload.email,
-        role: payload.role,
+        role: payload.role
       });
-
       expect((result as any).extraField).toBeUndefined();
     });
   });

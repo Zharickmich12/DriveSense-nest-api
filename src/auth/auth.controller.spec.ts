@@ -4,23 +4,24 @@ import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { JwtAuthGuard } from './jwt.guard';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, UseGuards } from '@nestjs/common'; 
+import 'reflect-metadata'; 
+
+const mockUser = {
+  id: 1,
+  email: 'test@example.com',
+  name: 'Test User',
+  role: 'user',
+};
+
+const mockAuthService = {
+  register: jest.fn(),
+  login: jest.fn(),
+};
 
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
-
-  const mockAuthService = {
-    register: jest.fn(),
-    login: jest.fn(),
-  };
-
-  const mockUser = {
-    id: 1,
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'user'
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -106,8 +107,15 @@ describe('AuthController', () => {
     });
 
     it('should be protected with JwtAuthGuard', () => {
-      const guards = Reflect.getMetadata('__guards__', AuthController.prototype.getProfile);
-      expect(guards).toContain(JwtAuthGuard);
+     
+      const guards = Reflect.getMetadata('__guards__', controller.getProfile); 
+
+      expect(guards).toBeDefined();
+      expect(guards.length).toBeGreaterThan(0);
+      
+      const hasJwtGuard = guards.some((guard: Function) => guard === JwtAuthGuard);
+      
+      expect(hasJwtGuard).toBeTruthy();
     });
   });
 });

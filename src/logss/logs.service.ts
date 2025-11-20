@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Log } from './entities/log.entity';
 import { City } from '../city/entities/city.entity';
 import { Vehicle } from '../vehicles/entities/vehicle.entity';
@@ -10,73 +10,139 @@ import { FilterLogDto } from './dto/filter-log.dto';
 @Injectable()
 export class LogsService {
 
- constructor(
-@InjectRepository(Log)
-private readonly logRepository: Repository<Log>,
+  constructor(
+    @InjectRepository(Log)
+    private readonly logRepository: Repository<Log>,
 
-@InjectRepository(City)
-private readonly cityRepository: Repository<City>,
+    @InjectRepository(City)
+    private readonly cityRepository: Repository<City>,
 
-@InjectRepository(Vehicle)
- private readonly vehicleRepository: Repository<Vehicle>,
-) {}
+    @InjectRepository(Vehicle)
+    private readonly vehicleRepository: Repository<Vehicle>,
+  ) {}
 
-
-async create(data: CreateLogDto) {
-
-    // Mantener la verificación y asignación de entidades
-    let city: City | null = null; 
+  async create(data: CreateLogDto) {
+    let city: City | null = null;
     let vehicle: Vehicle | null = null;
 
     if (data.cityId) {
-        city = await this.cityRepository.findOne({ where: { id: data.cityId } });
-        if (!city) throw new NotFoundException(`City ${data.cityId} not found`);
+      city = await this.cityRepository.findOne({ where: { id: data.cityId } });
+      if (!city) throw new NotFoundException(`City ${data.cityId} not found`);
     }
 
     if (data.vehicleId) {
-        vehicle = await this.vehicleRepository.findOne({ where: { id: data.vehicleId } });
-        if (!vehicle) throw new NotFoundException(`Vehicle ${data.vehicleId} not found`);
+      vehicle = await this.vehicleRepository.findOne({ where: { id: data.vehicleId } });
+      if (!vehicle) throw new NotFoundException(`Vehicle ${data.vehicleId} not found`);
     }
 
-    // 1. Separar los IDs del DTO
     const { cityId, vehicleId, ...logData } = data;
 
-    // 2. Definir el objeto base con los datos planos
     const logCreationData: any = {
-        ...logData,
+      ...logData,
     };
 
-    // 3. AÑADIR CONDICIONALMENTE las relaciones solo si existen
     if (city) {
-        logCreationData.city = city;
+      logCreationData.city = city;
     }
     if (vehicle) {
-        logCreationData.vehicle = vehicle;
+      logCreationData.vehicle = vehicle;
     }
 
-    // 4. Crear el objeto con la data limpia y condicional
     const log = this.logRepository.create(logCreationData);
 
     return await this.logRepository.save(log);
-}
-  async findAll(filters?: FilterLogDto) { // Acepta el argumento opcional
-    const whereCondition = {};
-    
-    // Si necesitas filtrar por usuario:
-    if (filters && filters.user) {
-        whereCondition['user'] = filters.user;
-    }
-    
-    // Si necesitas filtrar por vehículo:
-    if (filters && filters.vehicleId) {
-        whereCondition['vehicle'] = { id: filters.vehicleId };
+  }
+
+  async findAll(filters?: FilterLogDto) {
+    const whereCondition: any = {};
+
+    // Filtro por usuario
+    if (filters?.user) {
+      whereCondition.user = filters.user;
     }
 
-    return this.logRepository.find({
-        where: whereCondition, 
-        relations: ['city', 'vehicle'],
-        order: { createdAt: 'DESC' },
+    // Filtro por placa
+    if (filters?.vehiclePlate) {
+      whereCondition.vehiclePlate = filters.vehiclePlate;
+    }
+
+    // Filtro por ciudad
+    if (filters?.cityId) {
+      whereCondition.city = { id: filters.cityId };
+    }
+
+    // Filtro por vehículo
+    if (filters?.vehicleId) {
+      whereCondition.vehicle = { id: filters.vehicleId };
+    }
+
+    // Filtro por rango de fechas
+    if (filters?.startDate && filters?.endDate) {
+      const startDate = new Date(filters.startDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      whereCondition.createdAt = Between(startDate, endDate);
+    } else if (filters?.startDate) {
+      const startDate = new Date(filters.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      whereCondition.createdAt = Between(startDate, new Date());
+    }
+
+    const logs = await this.logRepository.find({
+      where: whereCondition,
+      relations: ['city', 'vehicle'],
+      order: { createdAt: 'DESC' },
     });
-}
 
+    return {
+      message: `Total logs found: ${logs.length}`,
+      data: logs,
+    };
+  }
+
+  // Método adicional para estadísticas
+  async getStats(cityId?: number) {
+    const whereCondition: any = {};
+    
+    if (cityId) {
+      whereCondition.city = { id: cityId };
+    }
+
+    const logs = await this.logRepository.find({
+      where: whereCondition,
+      relations: ['city', 'vehicle'],
+    });
+
+    const stats = {
+      total: logs.length,
+      byEndpoint: {} as Record<string, number>,
+      byUser: {} as Record<string, number>,
+      successfulQueries: 0,
+      errorQueries: 0,
+    };
+
+    logs.forEach(log => {
+      // Contar por endpoint
+      if (log.endpoint) {
+        stats.byEndpoint[log.endpoint] = (stats.byEndpoint[log.endpoint] || 0) + 1;
+      }
+
+      // Contar por usuario
+      if (log.user) {
+        stats.byUser[log.user] = (stats.byUser[log.user] || 0) + 1;
+      }
+
+      // Contar éxitos y errores
+      if (log.result && log.result.includes('SUCCESS')) {
+        stats.successfulQueries++;
+      } else if (log.result && log.result.includes('ERROR')) {
+        stats.errorQueries++;
+      }
+    });
+
+    return stats;
+  }
 }

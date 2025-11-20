@@ -1,13 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, BadRequestException, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  BadRequestException,
+  Request,
+} from '@nestjs/common';
 import { RulesService } from './rules.service';
 import { CreateRuleDto } from './dto/create-rule.dto';
 import { UpdateRuleDto } from './dto/update-rule.dto';
+import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesEnum } from '../users/entities/user.entity';
-import { CheckCirculationDto } from './dto/check-circulation.dto';
-import { CheckWeekDto } from './dto/check-week.dto';
 
 @Controller('rules')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,7 +33,34 @@ export class RulesController {
     return this.rulesService.create(createRuleDto);
   }
 
+  // ==========================================================
+  // 🔵 ENDPOINT PRINCIPAL DE CONSULTA CON LOGS
+  // ==========================================================
+  @Post('check')
+  checkRule(
+    @Body() data: { plate: string; cityId: number; date: string },
+    @Request() req: any,
+  ) {
+    const { plate, cityId, date } = data;
 
+    if (!plate || !cityId || !date) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate, cityId y date.',
+        en: 'You must provide plate, cityId and date.',
+      });
+    }
+
+    // Obtener el email del usuario autenticado
+    const userEmail = req.user?.email || 'anonymous';
+
+    return this.rulesService.checkCirculation(
+      plate,
+      Number(cityId),
+      date,
+      false,
+      userEmail, // Pasar el usuario al servicio
+    );
+  }
 
   @Get()
   @Roles(RolesEnum.ADMIN)
@@ -51,37 +87,56 @@ export class RulesController {
   }
 
   // ==========================================================
-  //  CONSULTA POR DÍA (POST /rules/check)
+  // 🔵 CONSULTA POR DÍA (POST /rules/day)
   // ==========================================================
-@Post('check')
-@Roles(RolesEnum.ADMIN, RolesEnum.USER)
-checkRule(@Req() req, @Body() dto: CheckWeekDto) {
-  const user = req.user;
+  @Post('day')
+  async checkByDay(@Body() body: any, @Request() req: any) {
+    const { plate, cityId, date } = body;
 
-  return this.rulesService.checkCirculation(
-    dto.plate,
-    dto.cityId,
-    dto.date ?? new Date().toISOString(),
-    user,
-    false,
-  );
-}
+    // Validaciones
+    if (!plate || !cityId || !date) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate, cityId y date.',
+        en: 'You must provide plate, cityId and date.',
+      });
+    }
 
+    const userEmail = req.user?.email || 'anonymous';
 
-@Post('week')
-@Roles(RolesEnum.ADMIN, RolesEnum.USER)
-checkByWeek(@Req() req, @Body() dto: CheckWeekDto) {
-  const user = req.user;
+    // Consultar por un día específico
+    return this.rulesService.checkCirculation(
+      plate,
+      Number(cityId),
+      date,
+      false, // fullWeek = false
+      userEmail,
+    );
+  }
 
-return this.rulesService.checkCirculation(
-    dto.plate,
-    dto.cityId,
-    dto.date ?? new Date().toISOString(),
-    user,
-    true,   // este sí debería ser TRUE para semana
-);
+  // ==========================================================
+  // 🔵 CONSULTA SEMANAL (POST /rules/week)
+  // ==========================================================
+  @Post('week')
+  async checkByWeek(@Body() body: any, @Request() req: any) {
+    const { plate, cityId } = body;
 
+    // Validaciones
+    if (!plate || !cityId) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate y cityId.',
+        en: 'You must provide plate and cityId.',
+      });
+    }
 
-}
+    const userEmail = req.user?.email || 'anonymous';
 
+    // Consultar semana completa
+    return this.rulesService.checkCirculation(
+      plate,
+      Number(cityId),
+      undefined,
+      true, // fullWeek = true
+      userEmail,
+    );
+  }
 }

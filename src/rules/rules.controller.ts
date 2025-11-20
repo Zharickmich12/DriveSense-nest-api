@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req , BadRequestException, Request} from '@nestjs/common';
 import { RulesService } from './rules.service';
 import { CreateRuleDto } from './dto/create-rule.dto';
 import { UpdateRuleDto } from './dto/update-rule.dto';
@@ -23,6 +23,31 @@ export class RulesController {
   @ApiResponse({ status: 400, description: 'Invalid data.' })
   create(@Body() createRuleDto: CreateRuleDto) {
     return this.rulesService.create(createRuleDto);
+  }
+
+  @Post('check')
+  checkRule(
+    @Body() data: { plate: string; cityId: number; date: string },
+    @Request() req: any,
+  ) {
+    const { plate, cityId, date } = data;
+
+    if (!plate || !cityId || !date) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate, cityId y date.',
+        en: 'You must provide plate, cityId and date.',
+      });
+    }
+
+    const userEmail = req.user?.email || 'anonymous';
+
+    return this.rulesService.checkCirculation(
+      plate,
+      Number(cityId),
+      date,
+      false,
+      userEmail,
+    );
   }
 
   @Get()
@@ -58,33 +83,47 @@ export class RulesController {
     return this.rulesService.remove(+id);
   }
 
-  @Post('check')
-  @Roles(RolesEnum.ADMIN, RolesEnum.USER)
-  @ApiOperation({ summary: 'Check circulation for a day' })
-  @ApiResponse({ status: 200, description: 'Returns circulation result.' })
-  checkRule(@Req() req, @Body() dto: CheckWeekDto) {
-    const user = req.user;
+  @Post('day')
+  async checkByDay(@Body() body: any, @Request() req: any) {
+    const { plate, cityId, date } = body;
+
+    if (!plate || !cityId || !date) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate, cityId y date.',
+        en: 'You must provide plate, cityId and date.',
+      });
+    }
+
+    const userEmail = req.user?.email || 'anonymous';
+
     return this.rulesService.checkCirculation(
-      dto.plate,
-      dto.cityId,
-      dto.date ?? new Date().toISOString(),
-      user,
-      false,
+      plate,
+      Number(cityId),
+      date,
+      false, // fullWeek = false
+      userEmail,
     );
   }
 
   @Post('week')
-  @Roles(RolesEnum.ADMIN, RolesEnum.USER)
-  @ApiOperation({ summary: 'Check circulation for a week' })
-  @ApiResponse({ status: 200, description: 'Returns circulation results for the week.' })
-  checkByWeek(@Req() req, @Body() dto: CheckWeekDto) {
-    const user = req.user;
+  async checkByWeek(@Body() body: any, @Request() req: any) {
+    const { plate, cityId } = body;
+
+    if (!plate || !cityId) {
+      throw new BadRequestException({
+        es: 'Debes enviar plate y cityId.',
+        en: 'You must provide plate and cityId.',
+      });
+    }
+
+    const userEmail = req.user?.email || 'anonymous';
+
     return this.rulesService.checkCirculation(
-      dto.plate,
-      dto.cityId,
-      dto.date ?? new Date().toISOString(),
-      user,
-      true,
+      plate,
+      Number(cityId),
+      '',
+      true, // fullWeek = true
+      userEmail,
     );
   }
 }

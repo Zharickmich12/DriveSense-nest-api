@@ -22,13 +22,12 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('DriveSense API')
-    .setDescription('API Backend para el control inteligente de pico y placa')
+    .setDescription('Backend API for intelligent peak and plate control')
     .setVersion('1.0')
     .addBearerAuth() // JWT
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+   const document = SwaggerModule.createDocument(app, config);
 
   const customOptions: SwaggerCustomOptions = {
     swaggerOptions: {
@@ -42,6 +41,8 @@ async function bootstrap() {
       'https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-standalone-preset.js',
     ]
   }
+
+  SwaggerModule.setup('api', app, document, customOptions)
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

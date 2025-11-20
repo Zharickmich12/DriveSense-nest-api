@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRuleDto } from './dto/create-rule.dto';
 import { UpdateRuleDto } from './dto/update-rule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,31 +7,26 @@ import { City } from '../city/entities/city.entity';
 import { Repository } from 'typeorm';
 import { LogsService } from '../logss/logs.service';
 import { Vehicle } from '../vehicles/entities/vehicle.entity';
-import { RolesEnum } from 'src/users/entities/user.entity';
-import { parseISO } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class RulesService {
-  constructor(
+
+   constructor(
     @InjectRepository(Rule)
     private readonly ruleRepository: Repository<Rule>,
 
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
-
     @InjectRepository(City)
     private readonly cityRepository: Repository<City>,
-
-    private readonly logsService: LogsService,
+    private readonly logsService: LogsService
   ) {}
 
   async create(createRuleDto: CreateRuleDto) {
-    const { cityId, dayOfWeek, ...data } = createRuleDto;
+    const { cityId, dayOfWeek,...data } = createRuleDto;
     const city = await this.cityRepository.findOneBy({ id: cityId });
 
-    if (!city)
-      throw new NotFoundException(`The city with id ${cityId} was not found. `);
+    if (!city) throw new NotFoundException(`The city with id ${cityId} was not found. `);
 
     const existingRule = await this.ruleRepository.findOne({
       where: {
@@ -51,7 +42,8 @@ export class RulesService {
       );
     }
 
-    const rule = this.ruleRepository.create({ ...data, dayOfWeek, city });
+
+    const rule = this.ruleRepository.create({ ...data,dayOfWeek, city });
     await this.ruleRepository.save(rule);
 
     return {
@@ -73,18 +65,14 @@ export class RulesService {
       where: { id },
       relations: ['city'],
     });
-    if (!rule)
-      throw new NotFoundException(`The rule with id ${id} was not found.`);
+    if (!rule) throw new NotFoundException(`The rule with id ${id} was not found.`);
     return rule;
   }
 
   async update(id: number, updateRuleDto: UpdateRuleDto) {
-    const rule = await this.ruleRepository.findOne({
-      where: { id },
-      relations: ['city'],
-    });
-    if (!rule)
-      throw new NotFoundException(`The rule with id ${id} was not found.`);
+    const rule = await this.ruleRepository.findOne({ where: { id },
+      relations: ['city'],});
+    if (!rule) throw new NotFoundException(`The rule with id ${id} was not found.`);
 
     Object.assign(rule, updateRuleDto);
     await this.ruleRepository.save(rule);
@@ -101,149 +89,174 @@ export class RulesService {
     return { message: 'Rule deleted successfully.' };
   }
 
-  // ===========================================================
-  //  CHECK CIRCULATION
-  // ===========================================================
   async checkCirculation(
     plate: string,
     cityId: number,
-    date: string,
-    user: any,
+    date?: string,
     fullWeek: boolean = false,
+    user?: string,
   ) {
-    // ==============================
-    // Validar permisos
-    // ==============================
-    if (user.role === RolesEnum.USER) {
-      // Verificar si este usuario tiene ese vehículo
-      const vehicle = await this.vehicleRepository.findOne({
-        where: {
-          licensePlate: plate,
-          user: { id: user.id },
+
+    const plateRegex = /^[A-Za-z]{3}[0-9]{3}$/;
+
+    if (!plateRegex.test(plate)) {
+      const errorResult = {
+        canCirculate: false,
+        message: {
+          es: `La placa "${plate}" no es válida o no existe en el sistema (formato esperado: ABC123).`,
+          en: `The plate "${plate}" is not valid or does not exist in the system (expected format: ABC123).`,
         },
-        relations: ['user'],
+      };
+
+      await this.logsService.create({
+        user: user || 'anonymous',
+        method: 'POST',
+        endpoint: '/rules/check',
+        body: JSON.stringify({ plate, cityId, date, fullWeek }),
+        vehiclePlate: plate,
+        result: 'ERROR: Invalid plate format',
+        cityId: cityId,
       });
 
-      if (!vehicle) {
-        throw new BadRequestException({
-          es: 'No puedes consultar un vehículo que no te pertenece.',
-          en: 'You cannot query a vehicle that does not belong to you.',
-        });
-      }
+      return errorResult;
     }
 
-    //  Tomar último dígito de la placa (DTO ya validó formato)
     const lastDigit = plate.slice(-1);
 
-    // ----------------------------
-    //  Validar ciudad
-    // ----------------------------
     const city = await this.cityRepository.findOne({ where: { id: cityId } });
 
     if (!city) {
+
+      await this.logsService.create({
+        user: user || 'anonymous',
+        method: 'POST',
+        endpoint: '/rules/check',
+        body: JSON.stringify({ plate, cityId, date, fullWeek }),
+        vehiclePlate: plate,
+        result: `ERROR: City ${cityId} not found`,
+        cityId: cityId,
+      });
+
       throw new NotFoundException({
         es: `La ciudad con ID ${cityId} no existe.`,
         en: `City with ID ${cityId} does not exist.`,
       });
     }
 
-    // ----------------------------
-    //  Obtener reglas activas
-    // ----------------------------
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { licensePlate: plate.toUpperCase() },
+    });
+
     const rules = await this.ruleRepository.find({
       where: { city: { id: cityId }, isActive: true },
     });
 
     if (rules.length === 0) {
-      return {
+      const result = {
         canCirculate: true,
         message: {
           es: `Esta ciudad no tiene reglas activas. Puedes circular libremente.`,
           en: `This city has no active rules. You may circulate freely.`,
         },
       };
+
+      await this.logsService.create({
+        user: user || 'anonymous',
+        method: 'POST',
+        endpoint: '/rules/check',
+        body: JSON.stringify({ plate, cityId, date, fullWeek }),
+        vehiclePlate: plate,
+        result: 'SUCCESS: No active rules, can circulate',
+        cityId: city.id,
+        vehicleId: vehicle?.id,
+      });
+
+      return result;
     }
 
-    // ----------------------------
-    //  Consulta semanal
-    // ----------------------------
     if (fullWeek) {
-      return this.evaluateFullWeek(lastDigit, rules);
+      const result = this.evaluateFullWeek(lastDigit, rules);
+
+      await this.logsService.create({
+        user: user || 'anonymous',
+        method: 'POST',
+        endpoint: '/rules/week',
+        body: JSON.stringify({ plate, cityId, fullWeek }),
+        vehiclePlate: plate,
+        result: JSON.stringify(result),
+        cityId: city.id,
+        vehicleId: vehicle?.id,
+      });
+
+      return result;
     }
 
-    // ----------------------------
-    // 5. Consulta por día específico
-    // ----------------------------
     if (!date) {
+      await this.logsService.create({
+        user: user || 'anonymous',
+        method: 'POST',
+        endpoint: '/rules/check',
+        body: JSON.stringify({ plate, cityId, date, fullWeek }),
+        vehiclePlate: plate,
+        result: 'ERROR: No date provided',
+        cityId: city.id,
+        vehicleId: vehicle?.id,
+      });
+
       throw new BadRequestException({
         es: 'Debes enviar una fecha válida.',
         en: 'You must provide a valid date.',
       });
     }
 
-    // Convertir string a Date en la zona horaria de Bogotá
-    const dateUtc = parseISO(date);
-    const selectedDate = toZonedTime(dateUtc, 'America/Bogota');
+    const selectedDate = new Date(date);
 
     if (isNaN(selectedDate.getTime())) {
+      await this.logsService.create({
+        user: user || 'anonymous',
+        method: 'POST',
+        endpoint: '/rules/check',
+        body: JSON.stringify({ plate, cityId, date, fullWeek }),
+        vehiclePlate: plate,
+        result: 'ERROR: Invalid date format',
+        cityId: city.id,
+        vehicleId: vehicle?.id,
+      });
+
       throw new BadRequestException({
         es: 'Formato de fecha inválido.',
         en: 'Invalid date format.',
       });
     }
 
-    const dayNames = [
-      'Domingo',
-      'Lunes',
-      'Martes',
-      'Miércoles',
-      'Jueves',
-      'Viernes',
-      'Sabado',
-    ];
-    const dayOfWeek = dayNames[selectedDate.getDay()];
-
     const result = this.evaluateSingleDay(lastDigit, selectedDate, rules);
 
-    return {
-      ...result,
-      plate,
-      lastDigit,
-      city: city.name,
-      date: selectedDate.toISOString(),
-      dayOfWeek,
-      restrictions: rules
-        .filter((r) => r.dayOfWeek === dayOfWeek)
-        .map((r) => ({
-          startTime: r.startTime,
-          endTime: r.endTime,
-          restrictedDigits: r.restrictedDigits,
-        })),
-    };
+    await this.logsService.create({
+      user: user || 'anonymous',
+      method: 'POST',
+      endpoint: '/rules/day',
+      body: JSON.stringify({ plate, cityId, date }),
+      vehiclePlate: plate,
+      result: JSON.stringify({
+        canCirculate: result.canCirculate,
+        message: result.message.es,
+      }),
+      cityId: city.id,
+      vehicleId: vehicle?.id,
+    });
+
+    return result;
   }
 
-  // ===========================================================
-  //  Evaluar un día específico
-  // ===========================================================
   private evaluateSingleDay(lastDigit: string, date: Date, rules: Rule[]) {
-    const dayNames = [
-      'Domingo',
-      'Lunes',
-      'Martes',
-      'Miércoles',
-      'Jueves',
-      'Viernes',
-      'Sabado',
-    ];
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sabado'];
     const dayText = dayNames[date.getDay()];
 
     const currentHour = date.getHours();
     const currentMinutes = date.getMinutes();
-    const now = Number(
-      `${currentHour}${currentMinutes.toString().padStart(2, '0')}`,
-    );
+    const now = Number(`${currentHour}${currentMinutes.toString().padStart(2, '0')}`);
 
-    const dayRules = rules.filter((r) => r.dayOfWeek === dayText);
+    const dayRules = rules.filter(r => r.dayOfWeek === dayText);
 
     if (!dayRules.length) {
       return {
@@ -282,19 +295,8 @@ export class RulesService {
     };
   }
 
-  // ===========================================================
-  //  Evaluación semanal
-  // ===========================================================
   private evaluateFullWeek(lastDigit: string, rules: Rule[]) {
-    const dayNames = [
-      'Domingo',
-      'Lunes',
-      'Martes',
-      'Miércoles',
-      'Jueves',
-      'Viernes',
-      'Sabado',
-    ];
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sabado'];
 
     const week: Array<{
       day: string;
@@ -303,7 +305,7 @@ export class RulesService {
     }> = [];
 
     for (const day of dayNames) {
-      const dayRules = rules.filter((r) => r.dayOfWeek === day);
+      const dayRules = rules.filter(r => r.dayOfWeek === day);
 
       if (!dayRules.length) {
         week.push({
@@ -317,7 +319,7 @@ export class RulesService {
         continue;
       }
 
-      const restriction = dayRules.find((r) =>
+      const restriction = dayRules.find(r =>
         r.restrictedDigits.includes(lastDigit),
       );
 

@@ -24,7 +24,6 @@ private readonly cityRepository: Repository<City>,
 
 async create(data: CreateLogDto) {
 
-    // Mantener la verificación y asignación de entidades
     let city: City | null = null; 
     let vehicle: Vehicle | null = null;
 
@@ -38,15 +37,12 @@ async create(data: CreateLogDto) {
         if (!vehicle) throw new NotFoundException(`Vehicle ${data.vehicleId} not found`);
     }
 
-    // 1. Separar los IDs del DTO
     const { cityId, vehicleId, ...logData } = data;
 
-    // 2. Definir el objeto base con los datos planos
     const logCreationData: any = {
         ...logData,
     };
 
-    // 3. AÑADIR CONDICIONALMENTE las relaciones solo si existen
     if (city) {
         logCreationData.city = city;
     }
@@ -54,20 +50,17 @@ async create(data: CreateLogDto) {
         logCreationData.vehicle = vehicle;
     }
 
-    // 4. Crear el objeto con la data limpia y condicional
     const log = this.logRepository.create(logCreationData);
 
     return await this.logRepository.save(log);
 }
-  async findAll(filters?: FilterLogDto) { // Acepta el argumento opcional
+  async findAll(filters?: FilterLogDto) { 
     const whereCondition = {};
-    
-    // Si necesitas filtrar por usuario:
+
     if (filters && filters.user) {
         whereCondition['user'] = filters.user;
     }
-    
-    // Si necesitas filtrar por vehículo:
+
     if (filters && filters.vehicleId) {
         whereCondition['vehicle'] = { id: filters.vehicleId };
     }

@@ -3,47 +3,34 @@ import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { JwtAuthGuard } from './jwt.guard';
-
-/**
- * @class AuthController
- * @description Controller to handle user authentication (registration, login, and profile).
- * @route /auth
- */
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
-     /**
-     * @method register
-     * @description Registers a new user.
-     * @route POST /auth/register
-     * @param data - User data to register.
-     */
     @Post('register')
+    @ApiOperation({ summary: 'Registers a new user' })
+    @ApiResponse({ status: 201, description: 'User successfully registered' })
+    @ApiResponse({ status: 400, description: 'Invalid input data' })
     register(@Body() data: CreateUserDto) {
         return this.authService.register(data);
     }
 
-    /**
-     * @method login
-     * @description Logs in a user with credentials.
-     * @route POST /auth/login
-     * @param data - Access credentials.
-     */
     @Post('login')
+    @ApiOperation({ summary: 'Logs in a user with credentials' })
+    @ApiResponse({ status: 200, description: 'User successfully logged in' })
+    @ApiResponse({ status: 401, description: 'Invalid credentials' })
     login(@Body() data: LoginDTO) {
         return this.authService.login(data);
     }
 
-    /**
-     * @method getProfile
-     * @description Gets the authenticated user's profile via JWT.
-     * @route GET /auth/profile
-     * @guard JwtAuthGuard
-     * @returns Authenticated user information.
-     */
     @UseGuards(JwtAuthGuard)
     @Get('profile')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Gets the authenticated user profile' })
+    @ApiResponse({ status: 200, description: 'Returns the user profile' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
     getProfile(@Request() req) {
         return req.user;
     }

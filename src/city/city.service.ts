@@ -26,7 +26,7 @@ export class CityService {
     if (error.code === 'ER_DUP_ENTRY') {
       throw new BadRequestException(`La ciudad "${createCityDto.name}" ya existe`);
     }
-    throw error; // relanza otros errores
+    throw error;
   }
 }
 

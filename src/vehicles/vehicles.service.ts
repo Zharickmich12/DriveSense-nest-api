@@ -24,7 +24,7 @@ export class VehiclesService {
 
     const vehicle = this.vehicleRepo.create({
       ...data,
-      user, // asocia el vehículo al usuario actual
+      user,
     });
 
     return await this.vehicleRepo.save(vehicle);
@@ -58,7 +58,6 @@ export class VehiclesService {
     }));
   }
 
-  // Devuelve la entidad completa para poder usarla en update/remove
   private async findVehicleEntity(id: number, user: User): Promise<Vehicle> {
     const vehicle = await this.vehicleRepo.findOne({
       where: user.role === RolesEnum.ADMIN ? { id } : { id, user: { id: user.id } },
@@ -100,7 +99,6 @@ async update(id: number, data: UpdateVehicleDto, user: User) {
     throw new NotFoundException('Vehicle not found or you do not have permission to update it.');
   }
 
-  // Validar si la nueva placa ya existe en otro vehículo
   if (data.licensePlate && data.licensePlate !== vehicle.licensePlate) {
     const existingVehicle = await this.vehicleRepo.findOne({ where: { licensePlate: data.licensePlate } });
     if (existingVehicle) {
@@ -108,12 +106,10 @@ async update(id: number, data: UpdateVehicleDto, user: User) {
     }
   }
 
-  // Actualizar solo campos permitidos
   Object.assign(vehicle, data);
 
   const updated = await this.vehicleRepo.save(vehicle);
 
-  // Ocultar datos sensibles
   return {
     id: updated.id,
     licensePlate: updated.licensePlate,
@@ -134,27 +130,22 @@ async update(id: number, data: UpdateVehicleDto, user: User) {
 
 
  async remove(id: number, user: User) {
-  // Buscar el vehículo
+
   const vehicle = await this.vehicleRepo.findOne({
     where: { id },
     relations: ['user'],
   });
 
-  // Si no existe realmente
   if (!vehicle) {
     throw new NotFoundException('Vehicle not found.');
   }
 
-  // Validar permisos:
-  // - Admin puede eliminar todo
-  // - Usuario solo puede eliminar sus propios vehículos
   if (user.role !== RolesEnum.ADMIN && vehicle.user.id !== user.id) {
     throw new ForbiddenException('You do not have permission to delete this vehicle.');
   }
 
   await this.vehicleRepo.remove(vehicle);
 
-  // Respuesta limpia SIN datos sensibles
   return {
     success: true,
     message: 'Vehicle deleted successfully.',

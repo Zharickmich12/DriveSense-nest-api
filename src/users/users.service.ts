@@ -60,7 +60,7 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    const user = await this.findOneRaw(id); // user REAL
+    const user = await this.findOneRaw(id);
 
     await this.usersRepo.remove(user);
 
@@ -70,9 +70,6 @@ export class UsersService {
     };
   }
 
-  // ------------------------------------------------------------------
-  // 🔹 findByEmail (devuelve usuario completo para login)
-  // ------------------------------------------------------------------
   async findByEmail(email: string) {
     return this.usersRepo.findOneBy({ email });
   }

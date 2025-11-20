@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/assets/logo.png" alt="DriveSense Logo" width="120"/>
+</p>
+
 # DriveSense API
 
 ## Descripción del Proyecto
@@ -80,69 +84,113 @@ JWT_EXPIRES_IN = 1h
 ```
 
 ## Ejemplos de endpoints (rutas principales)
+
 ---
 
 ### Reglas (Rules)
 
-| Método | Ruta | Descripción | Headers | Body |
-|--------|------|-------------|--------|------|
-| POST | `/rules` | Crear una nueva regla (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "No Circulation", "description": "No circulación los lunes" }` |
-| GET | `/rules` | Listar todas las reglas (solo ADMIN) | `Authorization: Bearer <token>` | - |
-| GET | `/rules/:id` | Obtener una regla por ID (solo ADMIN) | `Authorization: Bearer <token>` | - |
-| PATCH | `/rules/:id` | Actualizar una regla (solo ADMIN) | `Authorization: Bearer <token>` | `{ "description": "Descripción actualizada" }` |
-| DELETE | `/rules/:id` | Eliminar una regla (solo ADMIN) | `Authorization: Bearer <token>` | - |
-| POST | `/rules/check` | Validar circulación para una placa específica | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1, "date": "2025-11-19" }` |
-| POST | `/rules/day` | Consulta de circulación por un día | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1, "date": "2025-11-19" }` |
-| POST | `/rules/week` | Consulta de circulación por semana completa | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1 }` |
+| Método | Ruta           | Descripción                                   | Headers                         | Body                                                                      |
+| ------ | -------------- | --------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------- |
+| POST   | `/rules`       | Crear una nueva regla (solo ADMIN)            | `Authorization: Bearer <token>` | `{ "name": "No Circulation", "description": "No circulación los lunes" }` |
+| GET    | `/rules`       | Listar todas las reglas (solo ADMIN)          | `Authorization: Bearer <token>` | -                                                                         |
+| GET    | `/rules/:id`   | Obtener una regla por ID (solo ADMIN)         | `Authorization: Bearer <token>` | -                                                                         |
+| PATCH  | `/rules/:id`   | Actualizar una regla (solo ADMIN)             | `Authorization: Bearer <token>` | `{ "description": "Descripción actualizada" }`                            |
+| DELETE | `/rules/:id`   | Eliminar una regla (solo ADMIN)               | `Authorization: Bearer <token>` | -                                                                         |
+| POST   | `/rules/check` | Validar circulación para una placa específica | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1, "date": "2025-11-19" }`                |
+| POST   | `/rules/day`   | Consulta de circulación por un día            | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1, "date": "2025-11-19" }`                |
+| POST   | `/rules/week`  | Consulta de circulación por semana completa   | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1 }`                                      |
 
 ---
 
 ### Ciudades (Cities)
 
-| Método | Ruta | Descripción | Headers | Body |
-|--------|------|-------------|--------|------|
-| POST | `/cities` | Crear una nueva ciudad (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "Bogotá" }` |
-| GET | `/cities` | Listar todas las ciudades | `Authorization: Bearer <token>` | - |
-| GET | `/cities/:id` | Obtener una ciudad por ID | `Authorization: Bearer <token>` | - |
-| PATCH | `/cities/:id` | Actualizar una ciudad (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "Medellín" }` |
-| DELETE | `/cities/:id` | Eliminar una ciudad (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| Método | Ruta          | Descripción                         | Headers                         | Body                     |
+| ------ | ------------- | ----------------------------------- | ------------------------------- | ------------------------ |
+| POST   | `/cities`     | Crear una nueva ciudad (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "Bogotá" }`   |
+| GET    | `/cities`     | Listar todas las ciudades           | `Authorization: Bearer <token>` | -                        |
+| GET    | `/cities/:id` | Obtener una ciudad por ID           | `Authorization: Bearer <token>` | -                        |
+| PATCH  | `/cities/:id` | Actualizar una ciudad (solo ADMIN)  | `Authorization: Bearer <token>` | `{ "name": "Medellín" }` |
+| DELETE | `/cities/:id` | Eliminar una ciudad (solo ADMIN)    | `Authorization: Bearer <token>` | -                        |
 
 ---
 
 ### Vehículos (Vehicles)
 
-| Método | Ruta | Descripción | Headers | Body |
-|--------|------|-------------|--------|------|
-| POST | `/vehicles` | Registrar un vehículo (solo ADMIN) | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "owner": "Juan Pérez", "cityId": 1 }` |
-| GET | `/vehicles` | Listar todos los vehículos | `Authorization: Bearer <token>` | - |
-| GET | `/vehicles/:id` | Obtener vehículo por ID | `Authorization: Bearer <token>` | - |
-| PATCH | `/vehicles/:id` | Actualizar vehículo (solo ADMIN) | `Authorization: Bearer <token>` | `{ "owner": "Carlos López" }` |
-| DELETE | `/vehicles/:id` | Eliminar vehículo (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| Método | Ruta            | Descripción                        | Headers                         | Body                                                        |
+| ------ | --------------- | ---------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| POST   | `/vehicles`     | Registrar un vehículo (solo ADMIN) | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "owner": "Juan Pérez", "cityId": 1 }` |
+| GET    | `/vehicles`     | Listar todos los vehículos         | `Authorization: Bearer <token>` | -                                                           |
+| GET    | `/vehicles/:id` | Obtener vehículo por ID            | `Authorization: Bearer <token>` | -                                                           |
+| PATCH  | `/vehicles/:id` | Actualizar vehículo (solo ADMIN)   | `Authorization: Bearer <token>` | `{ "owner": "Carlos López" }`                               |
+| DELETE | `/vehicles/:id` | Eliminar vehículo (solo ADMIN)     | `Authorization: Bearer <token>` | -                                                           |
 
 ---
 
 ### Usuarios (Users)
 
-| Método | Ruta | Descripción | Headers | Body |
-|--------|------|-------------|--------|------|
-| POST | `/users` | Crear un nuevo usuario (solo ADMIN) | `Authorization: Bearer <token>` | `{ "username": "nuevoUsuario", "password": "123456", "role": "USER" }` |
-| GET | `/users` | Listar todos los usuarios (solo ADMIN) | `Authorization: Bearer <token>` | - |
-| GET | `/users/:id` | Obtener usuario por ID (solo ADMIN) | `Authorization: Bearer <token>` | - |
-| PATCH | `/users/:id` | Actualizar usuario (solo ADMIN) | `Authorization: Bearer <token>` | `{ "role": "ADMIN" }` |
-| DELETE | `/users/:id` | Eliminar usuario (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| Método | Ruta         | Descripción                            | Headers                         | Body                                                                   |
+| ------ | ------------ | -------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
+| POST   | `/users`     | Crear un nuevo usuario (solo ADMIN)    | `Authorization: Bearer <token>` | `{ "username": "nuevoUsuario", "password": "123456", "role": "USER" }` |
+| GET    | `/users`     | Listar todos los usuarios (solo ADMIN) | `Authorization: Bearer <token>` | -                                                                      |
+| GET    | `/users/:id` | Obtener usuario por ID (solo ADMIN)    | `Authorization: Bearer <token>` | -                                                                      |
+| PATCH  | `/users/:id` | Actualizar usuario (solo ADMIN)        | `Authorization: Bearer <token>` | `{ "role": "ADMIN" }`                                                  |
+| DELETE | `/users/:id` | Eliminar usuario (solo ADMIN)          | `Authorization: Bearer <token>` | -                                                                      |
 
 ---
 
 ### Autenticación (Auth)
 
-| Método | Ruta | Descripción | Body |
-|--------|------|-------------|------|
-| POST | `/auth/login` | Iniciar sesión y obtener token JWT | `{ "username": "admin", "password": "admin123" }` |
-| POST | `/auth/register` | Registrar un nuevo usuario (solo ADMIN) | `{ "username": "nuevoUsuario", "password": "123456", "role": "USER" }` |
+| Método | Ruta             | Descripción                             | Body                                                                   |
+| ------ | ---------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| POST   | `/auth/login`    | Iniciar sesión y obtener token JWT      | `{ "username": "admin", "password": "admin123" }`                      |
+| POST   | `/auth/register` | Registrar un nuevo usuario (solo ADMIN) | `{ "username": "nuevoUsuario", "password": "123456", "role": "USER" }` |
 
 ---
 
 ### Nota importante
-- Todos los endpoints de `rules`, `cities`, `vehicles` y `users` requieren **autenticación**.   
+
+- Todos los endpoints de `rules`, `cities`, `vehicles` y `users` requieren **autenticación**.
 
 ## Pruebas Unitarias y Evidencias
+
+### Pruebas Implementadas
+
+Se implementaron pruebas unitarias para los DTOs y servicios principales de la API **DriveSense**, con el objetivo de validar la correcta funcionalidad y restricciones de los datos.
+
+### Resultados de la Ejecución
+
+Los tests fueron ejecutados con **Jest**, obteniéndose los siguientes resultados:
+
+- Todos los DTOs validan correctamente los datos esperados.
+- Los servicios CRUD cumplen con las reglas de negocio definidas.
+- Cobertura de código alcanzada:
+
+<img src="src/assets/testing%201.png" alt="Coverage 1" width="400"/>
+
+<img src="src/assets/testing%202.png" alt="Coverage 2" width="400"/>
+
+<img src="src/assets/testing%203.png" alt="Coverage 3" width="400"/>
+
+### Evidencias de Funcionamiento
+
+Se realizaron pruebas de los endpoints mediante **Postman**, obteniendo los resultados esperados:
+
+#### Registro de Usuario
+
+<img src="src/assets/register%201.png" alt="Registro" width="400"/>
+
+#### Inicio de Sesión
+
+<img src="src/assets/login%202.png" alt="Login" width="400"/>
+
+#### Crear Ciudad
+
+<img src="src/assets/city%203.png" alt="Crear Ciudad" width="400"/>
+
+#### Crear Regla
+
+<img src="src/assets/rule%204.png" alt="Crear Regla" width="400"/>
+
+#### Crear Vehículo
+
+<img src="src/assets/vehicle%205.png" alt="Crear Vehículo" width="400"/>

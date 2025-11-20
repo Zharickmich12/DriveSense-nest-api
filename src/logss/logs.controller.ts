@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { LogsService } from './logs.service';
 import { CreateLogDto } from './dto/create-log.dto';
 import { FilterLogDto } from './dto/filter-log.dto';
+import { ApiExcludeController } from '@nestjs/swagger';
 
+@ApiExcludeController()
 @Controller('logs')
 export class LogsController {
   constructor(private readonly logsService: LogsService) {}

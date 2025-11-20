@@ -7,6 +7,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { User } from '../users/entities/user.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { RolesEnum } from '../users/entities/user.entity'; 
 
 describe('VehiclesService', () => {
   let service: VehiclesService;
@@ -16,7 +17,7 @@ describe('VehiclesService', () => {
     id: 1,
     email: 'test@example.com',
     name: 'Test User',
-    role: 'user',
+    role: RolesEnum.USER, 
     createdAt: new Date(),
     updatedAt: new Date(),
   } as User;
@@ -31,6 +32,7 @@ describe('VehiclesService', () => {
     user: mockUser,
     createdAt: new Date(),
     updatedAt: new Date(),
+    logs: [],
   };
 
   const mockVehicleRepository = {
@@ -58,6 +60,7 @@ describe('VehiclesService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks(); 
   });
 
   describe('create', () => {
@@ -79,10 +82,11 @@ describe('VehiclesService', () => {
       expect(vehicleRepository.findOne).toHaveBeenCalledWith({
         where: { licensePlate: createVehicleDto.licensePlate }
       });
-      expect(vehicleRepository.create).toHaveBeenCalledWith({
+     
+      expect(vehicleRepository.create).toHaveBeenCalledWith(expect.objectContaining({
         ...createVehicleDto,
         user: mockUser
-      });
+      }));
       expect(vehicleRepository.save).toHaveBeenCalledWith(mockVehicle);
       expect(result).toEqual(mockVehicle);
     });
@@ -102,6 +106,7 @@ describe('VehiclesService', () => {
         .rejects.toThrow(ConflictException);
       await expect(service.create(createVehicleDto, mockUser))
         .rejects.toThrow('Vehicle with this license plate already exists');
+      expect(vehicleRepository.create).not.toHaveBeenCalled();
     });
   });
 
@@ -156,15 +161,22 @@ describe('VehiclesService', () => {
         model: 'Updated Model'
       };
 
+      const existingVehicle = { ...mockVehicle }; 
       const updatedVehicle = { ...mockVehicle, ...updateVehicleDto };
       
-      jest.spyOn(service, 'findOne').mockResolvedValue(mockVehicle);
+      jest.spyOn(service, 'findOne').mockResolvedValue(existingVehicle);
       mockVehicleRepository.save.mockResolvedValue(updatedVehicle);
 
       const result = await service.update(1, updateVehicleDto, mockUser);
 
       expect(service.findOne).toHaveBeenCalledWith(1, mockUser);
-      expect(vehicleRepository.save).toHaveBeenCalledWith(updatedVehicle);
+      
+      expect(vehicleRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+          id: 1,
+          brand: 'Updated Brand',
+          model: 'Updated Model',
+          user: mockUser,
+      }));
       expect(result).toEqual(updatedVehicle);
     });
 

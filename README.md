@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/assets/logo.png" alt="DriveSense Logo" width="120"/>
+  <img src="src/assets/logo.png" alt="DriveSense Logo" width="200"/>
 </p>
 
 # DriveSense API

@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/global-exception.filter';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
 import { LogsService } from './logss/logs.service';
 import { LoggingInterceptor } from './common/interceptors/login.interceptor';
 
@@ -29,6 +29,19 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  const customOptions: SwaggerCustomOptions = {
+    swaggerOptions: {
+      url: '/api-json'
+    },
+    customCssUrl: [
+      'https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui.css',
+    ],
+    customJs: [
+      'https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-bundle.js',
+      'https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-standalone-preset.js',
+    ]
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

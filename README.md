@@ -1,98 +1,148 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# DriveSense API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Descripción del Proyecto
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**DriveSense** es una API Backend desarrollada con **NestJS** que implementa un sistema **inteligente de control de pico y placa** para diferentes ciudades.
 
-## Description
+El objetivo es permitir que tanto usuarios como administradores gestionen y consulten las restricciones vehiculares de forma centralizada, segura y automatizada.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+El sistema permite registrar usuarios, ciudades, vehículos y reglas, así como consultar si un vehículo puede circular en una fecha y hora determinada. Además, registra logs automáticos de las consultas y cuenta con autenticación JWT, roles, validaciones, Swagger y MySQL.
 
-## Project setup
+---
 
-```bash
-$ npm install
-```
+## Roles de los Integrantes
 
-## Compile and run the project
+| Integrante         | Rol / Función                          |
+| ------------------ | -------------------------------------- |
+| Zharick Fetecua    | Product Owner / Desarrolladora backend |
+| Leidy Alvarez      | Scrum Master / Desarrolladora backend  |
+| Maria Angel Vargas | Desarrolladora backend                 |
+| Eileen Mendoza     | Desarrolladora backend                 |
+| Kelly Natalia Toro | Desarrolladora backend                 |
+
+---
+
+## Instrucciones para Ejecutar la API Localmente
+
+1. Clonar el repositorio:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone <https://github.com/Zharickmich12/DriveSense-nest-api.git>
+cd <drivesense-nest-api>
 ```
 
-## Run tests
+2. Instalar dependencias
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+3. Configurar variables de entorno (.env)
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cp .env.template .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+4. Luego editar el archivo con tus credenciales (DB_USER, DB_PASS, JWT_SECRET, etc.)
 
-## Resources
+5. Ejecutar migraciones de la base de datos
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npm run typeorm:migration:run
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+6. Iniciar el servidor en modo desarrollo
 
-## Support
+```bash
+npm run start:dev
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+El backend estará disponible por defecto en:
+http://localhost:3000
 
-## Stay in touch
+7. Acceder a la documentación Swagger
+   http://localhost:3000/api
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Variables de Entorno Requeridas
 
-## License
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+PORT = 4000
+APP_NAME = DriveSense_nest_api
+DB_HOST = localhost
+DB_PORT = 3306
+DB_USERNAME = root
+DB_PASSWORD =
+DB_NAME = drivesensedb
+JWT_SECRET_KEY = The_secret_key
+JWT_EXPIRES_IN = 1h
+```
+
+## Ejemplos de endpoints (rutas principales)
+---
+
+### Reglas (Rules)
+
+| Método | Ruta | Descripción | Headers | Body |
+|--------|------|-------------|--------|------|
+| POST | `/rules` | Crear una nueva regla (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "No Circulation", "description": "No circulación los lunes" }` |
+| GET | `/rules` | Listar todas las reglas (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| GET | `/rules/:id` | Obtener una regla por ID (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| PATCH | `/rules/:id` | Actualizar una regla (solo ADMIN) | `Authorization: Bearer <token>` | `{ "description": "Descripción actualizada" }` |
+| DELETE | `/rules/:id` | Eliminar una regla (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| POST | `/rules/check` | Validar circulación para una placa específica | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1, "date": "2025-11-19" }` |
+| POST | `/rules/day` | Consulta de circulación por un día | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1, "date": "2025-11-19" }` |
+| POST | `/rules/week` | Consulta de circulación por semana completa | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "cityId": 1 }` |
+
+---
+
+### Ciudades (Cities)
+
+| Método | Ruta | Descripción | Headers | Body |
+|--------|------|-------------|--------|------|
+| POST | `/cities` | Crear una nueva ciudad (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "Bogotá" }` |
+| GET | `/cities` | Listar todas las ciudades | `Authorization: Bearer <token>` | - |
+| GET | `/cities/:id` | Obtener una ciudad por ID | `Authorization: Bearer <token>` | - |
+| PATCH | `/cities/:id` | Actualizar una ciudad (solo ADMIN) | `Authorization: Bearer <token>` | `{ "name": "Medellín" }` |
+| DELETE | `/cities/:id` | Eliminar una ciudad (solo ADMIN) | `Authorization: Bearer <token>` | - |
+
+---
+
+### Vehículos (Vehicles)
+
+| Método | Ruta | Descripción | Headers | Body |
+|--------|------|-------------|--------|------|
+| POST | `/vehicles` | Registrar un vehículo (solo ADMIN) | `Authorization: Bearer <token>` | `{ "plate": "ABC123", "owner": "Juan Pérez", "cityId": 1 }` |
+| GET | `/vehicles` | Listar todos los vehículos | `Authorization: Bearer <token>` | - |
+| GET | `/vehicles/:id` | Obtener vehículo por ID | `Authorization: Bearer <token>` | - |
+| PATCH | `/vehicles/:id` | Actualizar vehículo (solo ADMIN) | `Authorization: Bearer <token>` | `{ "owner": "Carlos López" }` |
+| DELETE | `/vehicles/:id` | Eliminar vehículo (solo ADMIN) | `Authorization: Bearer <token>` | - |
+
+---
+
+### Usuarios (Users)
+
+| Método | Ruta | Descripción | Headers | Body |
+|--------|------|-------------|--------|------|
+| POST | `/users` | Crear un nuevo usuario (solo ADMIN) | `Authorization: Bearer <token>` | `{ "username": "nuevoUsuario", "password": "123456", "role": "USER" }` |
+| GET | `/users` | Listar todos los usuarios (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| GET | `/users/:id` | Obtener usuario por ID (solo ADMIN) | `Authorization: Bearer <token>` | - |
+| PATCH | `/users/:id` | Actualizar usuario (solo ADMIN) | `Authorization: Bearer <token>` | `{ "role": "ADMIN" }` |
+| DELETE | `/users/:id` | Eliminar usuario (solo ADMIN) | `Authorization: Bearer <token>` | - |
+
+---
+
+### Autenticación (Auth)
+
+| Método | Ruta | Descripción | Body |
+|--------|------|-------------|------|
+| POST | `/auth/login` | Iniciar sesión y obtener token JWT | `{ "username": "admin", "password": "admin123" }` |
+| POST | `/auth/register` | Registrar un nuevo usuario (solo ADMIN) | `{ "username": "nuevoUsuario", "password": "123456", "role": "USER" }` |
+
+---
+
+### Nota importante
+- Todos los endpoints de `rules`, `cities`, `vehicles` y `users` requieren **autenticación**.   
+
+## Pruebas Unitarias y Evidencias

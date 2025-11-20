@@ -15,7 +15,7 @@ export class FilterLogDto {
   cityId?: number;
 
   @IsOptional()
-  startDate?: string; // formato YYYY-MM-DD
+  startDate?: string; // format YYYY-MM-DD
 
   @IsOptional()
   endDate?: string;

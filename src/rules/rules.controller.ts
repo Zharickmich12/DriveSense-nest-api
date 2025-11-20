@@ -134,7 +134,7 @@ export class RulesController {
     return this.rulesService.checkCirculation(
       plate,
       Number(cityId),
-      undefined,
+      '',
       true, // fullWeek = true
       userEmail,
     );
